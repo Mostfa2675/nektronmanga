@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة التحكم — Nektron Manga</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+  :root {
+    --bg:#0d0d0d; --card:#161616; --border:#252525;
+    --green:#00e676; --text:#e0e0e0; --muted:#777;
+    --red:#ff5252; --blue:#40c4ff; --yellow:#ffd740;
+    --orange:#ff9100; --purple:#ce93d8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:system-ui,sans-serif;min-height:100vh}
+
+  /* Login */
+  #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:14px;padding:20px}
+  .login-logo{font-size:2.5rem;margin-bottom:4px}
+  #login-screen h1{color:var(--green);font-size:1.3rem;letter-spacing:.5px}
+  .login-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px 28px;display:flex;flex-direction:column;gap:14px;width:100%;max-width:320px}
+  #pass-input{background:#0d0d0d;border:1px solid var(--border);color:var(--text);padding:12px 16px;border-radius:10px;font-size:1rem;width:100%;text-align:center;direction:ltr;transition:border-color .2s}
+  #pass-input:focus{outline:none;border-color:var(--green)}
+  #login-btn{background:var(--green);color:#000;font-weight:800;border:none;padding:12px;border-radius:10px;cursor:pointer;font-size:0.95rem;width:100%;transition:opacity .15s}
+  #login-btn:hover{opacity:.88}
+  #login-error{color:var(--red);font-size:0.82rem;text-align:center;display:none}
+
+  /* Dashboard */
+  #dashboard{display:none;padding:20px 14px 80px;max-width:980px;margin:0 auto}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:10px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+  .topbar h1{color:var(--green);font-size:1.1rem;font-weight:800;display:flex;align-items:center;gap:8px}
+  .topbar-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{padding:8px 16px;border-radius:8px;border:1px solid;cursor:pointer;font-size:0.78rem;font-weight:600;transition:all .15s;background:transparent}
+  .btn-green{border-color:var(--green);color:var(--green)}.btn-green:hover{background:var(--green);color:#000}
+  .btn-red{border-color:var(--red);color:var(--red)}.btn-red:hover{background:var(--red);color:#fff}
+  .btn-blue{border-color:var(--blue);color:var(--blue)}.btn-blue:hover{background:var(--blue);color:#000}
+  .btn-solid{background:var(--green);color:#000;border-color:var(--green)}
+
+  /* Tabs */
+  .tabs{display:flex;gap:4px;margin-bottom:18px;border-bottom:1px solid var(--border);overflow-x:auto}
+  .tab{padding:10px 18px;font-size:0.8rem;font-weight:600;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s}
+  .tab.active{color:var(--green);border-bottom-color:var(--green)}
+
+  /* Tab panels */
+  .tab-panel{display:none}.tab-panel.active{display:block}
+
+  /* Stats */
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:18px}
+  .stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+  .stat-num{font-size:2rem;font-weight:800;color:var(--green)}
+  .stat-label{font-size:0.7rem;color:var(--muted);margin-top:3px}
+  .stat-card.blue .stat-num{color:var(--blue)}
+  .stat-card.yellow .stat-num{color:var(--yellow)}
+  .stat-card.red .stat-num{color:var(--red)}
+
+  /* Section */
+  .section{background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:14px;overflow:hidden}
+  .section-head{padding:12px 16px;font-size:0.82rem;font-weight:700;color:var(--blue);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
+  .section-body{padding:14px 16px}
+
+  /* Bar rows */
+  .bar-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #1c1c1c}
+  .bar-row:last-child{border-bottom:none}
+  .bar-label{font-size:0.77rem;color:var(--text);min-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bar-track{flex:1;background:#1e1e1e;border-radius:4px;height:6px}
+  .bar-fill{height:6px;border-radius:4px;background:var(--green)}
+  .bar-count{font-size:0.7rem;color:var(--muted);min-width:28px;text-align:left;direction:ltr}
+
+  /* Table */
+  .table-wrap{overflow-x:auto;max-height:320px;overflow-y:auto}
+  table{width:100%;border-collapse:collapse;font-size:0.7rem;direction:ltr}
+  th{background:#111;color:var(--muted);padding:8px 9px;text-align:left;font-weight:600;white-space:nowrap;position:sticky;top:0;z-index:1}
+  td{padding:7px 9px;border-bottom:1px solid #1a1a1a;white-space:nowrap;max-width:150px;overflow:hidden;text-overflow:ellipsis}
+  tr:hover td{background:#1b1b1b}
+
+  /* Ads panel */
+  .ads-grid{display:grid;gap:14px}
+  .ad-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+  .ad-card-head{padding:12px 16px;font-size:0.82rem;font-weight:700;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .ad-card-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+  .ad-label{font-size:0.75rem;color:var(--muted);margin-bottom:4px}
+  textarea.ad-code{width:100%;background:#0d0d0d;border:1px solid var(--border);color:var(--text);padding:10px;border-radius:8px;font-size:0.72rem;font-family:monospace;min-height:80px;resize:vertical;direction:ltr;transition:border-color .2s}
+  textarea.ad-code:focus{outline:none;border-color:var(--blue)}
+  .ad-toggle{display:flex;align-items:center;gap:10px}
+  .toggle-switch{position:relative;width:40px;height:22px;cursor:pointer}
+  .toggle-switch input{opacity:0;width:0;height:0}
+  .toggle-slider{position:absolute;inset:0;background:#333;border-radius:22px;transition:.3s}
+  .toggle-slider:before{content:"";position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s}
+  input:checked+.toggle-slider{background:var(--green)}
+  input:checked+.toggle-slider:before{transform:translateX(18px)}
+  .ad-preview{background:#111;border-radius:8px;padding:12px;min-height:50px;display:flex;align-items:center;justify-content:center;font-size:0.72rem;color:var(--muted);border:1px dashed var(--border)}
+  .save-btn{background:var(--green);color:#000;border:none;padding:9px 20px;border-radius:8px;font-weight:700;cursor:pointer;font-size:0.8rem;transition:opacity .15s}
+  .save-btn:hover{opacity:.85}
+
+  /* Maintenance */
+  .maint-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px}
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:0.72rem;font-weight:700;border:1px solid}
+  .badge-on{color:var(--red);border-color:var(--red);background:rgba(255,82,82,.08)}
+  .badge-off{color:var(--green);border-color:var(--green);background:rgba(0,230,118,.08)}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;padding:10px 24px;border-radius:24px;font-size:0.82rem;font-weight:700;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999}
+  .toast.show{opacity:1}
+  .toast.err{background:var(--red);color:#fff}
+
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:600px){.grid-2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-logo">🎌</div>
+  <h1>NEKTRON MANGA</h1>
+  <div class="login-box">
+    <div style="font-size:0.82rem;color:var(--muted);text-align:center">لوحة التحكم</div>
+    <input type="password" id="pass-input" placeholder="الرمز السري"
+      onkeydown="if(event.key==='Enter')doLogin()">
+    <button id="login-btn" onclick="doLogin()">دخول</button>
+    <div id="login-error">❌ رمز خاطئ أو انتهت الجلسة</div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <div class="topbar">
+    <h1>🎌 لوحة تحكم NEKTRON MANGA</h1>
+    <div class="topbar-actions">
+      <button class="btn btn-blue" onclick="loadData()">🔄 تحديث</button>
+      <button class="btn btn-red" onclick="doLogout()">خروج</button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('stats',this)">📊 الإحصائيات</div>
+    <div class="tab" onclick="switchTab('ads',this)">📢 الإعلانات</div>
+    <div class="tab" onclick="switchTab('settings',this)">⚙️ الإعدادات</div>
+    <div class="tab" onclick="switchTab('visitors',this)">👥 الزوار</div>
+  </div>
+
+  <!-- STATS TAB -->
+  <div id="tab-stats" class="tab-panel active">
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-num" id="s-total">—</div><div class="stat-label">إجمالي الزيارات</div></div>
+      <div class="stat-card blue"><div class="stat-num" id="s-unique">—</div><div class="stat-label">زوار فريدون</div></div>
+      <div class="stat-card yellow"><div class="stat-num" id="s-today">—</div><div class="stat-label">اليوم</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="section">
+        <div class="section-head">🌍 الدول</div>
+        <div class="section-body" id="top-countries"></div>
+      </div>
+      <div class="section">
+        <div class="section-head">📄 الصفحات</div>
+        <div class="section-body" id="top-pages"></div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="section">
+        <div class="section-head">🏙️ المدن</div>
+        <div class="section-body" id="top-cities"></div>
+      </div>
+      <div class="section">
+        <div class="section-head">📱 الشاشات</div>
+        <div class="section-body" id="top-screens"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADS TAB -->
+  <div id="tab-ads" class="tab-panel">
+    <div style="margin-bottom:12px;font-size:0.8rem;color:var(--muted)">
+      الصق كود الإعلان (Google AdSense أو أي شبكة) في الحقل المناسب واضغط حفظ.
+    </div>
+    <div class="ads-grid">
+
+      <div class="ad-card">
+        <div class="ad-card-head">
+          <span>📢 إعلان أعلى الموقع (Header)</span>
+          <div class="ad-toggle">
+            <label class="toggle-switch"><input type="checkbox" id="ad-header-enabled" onchange="saveAd('header')"><span class="toggle-slider"></span></label>
+            <span style="font-size:0.72rem;color:var(--muted)">تفعيل</span>
+          </div>
+        </div>
+        <div class="ad-card-body">
+          <div class="ad-label">كود الإعلان:</div>
+          <textarea class="ad-code" id="ad-header-code" placeholder="<script async src=...></script>&#10;<ins class=...></ins>" oninput="updatePreview('header')"></textarea>
+          <div class="ad-label">معاينة:</div>
+          <div class="ad-preview" id="ad-header-preview">لا يوجد كود</div>
+          <button class="save-btn" onclick="saveAd('header')">💾 حفظ</button>
+        </div>
+      </div>
+
+      <div class="ad-card">
+        <div class="ad-card-head">
+          <span>📢 إعلان أسفل الموقع (Footer)</span>
+          <div class="ad-toggle">
+            <label class="toggle-switch"><input type="checkbox" id="ad-footer-enabled" onchange="saveAd('footer')"><span class="toggle-slider"></span></label>
+            <span style="font-size:0.72rem;color:var(--muted)">تفعيل</span>
+          </div>
+        </div>
+        <div class="ad-card-body">
+          <div class="ad-label">كود الإعلان:</div>
+          <textarea class="ad-code" id="ad-footer-code" placeholder="<script async src=...></script>&#10;<ins class=...></ins>" oninput="updatePreview('footer')"></textarea>
+          <div class="ad-label">معاينة:</div>
+          <div class="ad-preview" id="ad-footer-preview">لا يوجد كود</div>
+          <button class="save-btn" onclick="saveAd('footer')">💾 حفظ</button>
+        </div>
+      </div>
+
+      <div class="ad-card">
+        <div class="ad-card-head">
+          <span>📢 إعلان وسط الصفحة (Middle)</span>
+          <div class="ad-toggle">
+            <label class="toggle-switch"><input type="checkbox" id="ad-middle-enabled" onchange="saveAd('middle')"><span class="toggle-slider"></span></label>
+            <span style="font-size:0.72rem;color:var(--muted)">تفعيل</span>
+          </div>
+        </div>
+        <div class="ad-card-body">
+          <div class="ad-label">كود الإعلان:</div>
+          <textarea class="ad-code" id="ad-middle-code" placeholder="<script async src=...></script>&#10;<ins class=...></ins>" oninput="updatePreview('middle')"></textarea>
+          <div class="ad-label">معاينة:</div>
+          <div class="ad-preview" id="ad-middle-preview">لا يوجد كود</div>
+          <button class="save-btn" onclick="saveAd('middle')">💾 حفظ</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SETTINGS TAB -->
+  <div id="tab-settings" class="tab-panel">
+    <div class="section">
+      <div class="section-head">🔧 وضع الصيانة</div>
+      <div class="maint-row">
+        <div>
+          <div style="font-size:0.85rem;font-weight:600">تفعيل وضع الصيانة</div>
+          <div style="font-size:0.75rem;color:var(--muted);margin-top:3px">يظهر للزوار رسالة "تحت الصيانة" بدلاً من الموقع</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span id="maint-badge" class="badge badge-off">● شغال</span>
+          <button class="btn btn-red" id="maint-btn" onclick="toggleMaintenance()">تفعيل الصيانة</button>
+        </div>
+      </div>
+    </div>
+    <div class="section" style="margin-top:14px">
+      <div class="section-head">📊 إعدادات Gemini AI</div>
+      <div class="section-body" style="font-size:0.82rem;color:var(--muted)">
+        لتفعيل OCR يجب إضافة متغير البيئة <code style="color:var(--green);background:#111;padding:2px 6px;border-radius:4px">GEMINI_API_KEY</code> في إعدادات Netlify.
+        <br><br>
+        احصل على مفتاح مجاني من: <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--blue)">Google AI Studio</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- VISITORS TAB -->
+  <div id="tab-visitors" class="tab-panel">
+    <div class="section">
+      <div class="section-head">👥 آخر الزيارات</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>الوقت</th><th>الدولة</th><th>المدينة</th><th>الصفحة</th><th>الشاشة</th></tr>
+          </thead>
+          <tbody id="visits-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '/api/admin';
+let savedPass = sessionStorage.getItem('nk_pass') || '';
+let maintenanceOn = false;
+const ADS_KEY = 'nk_ads_config';
+
+// ── Auth ────────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const pass = document.getElementById('pass-input').value.trim();
+  if (!pass) return;
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true;
+  btn.textContent = '...';
+  try {
+    const res = await fetch(API + '?pass=' + encodeURIComponent(pass));
+    if (res.status === 401) throw new Error('wrong');
+    if (!res.ok) throw new Error('err');
+    savedPass = pass;
+    sessionStorage.setItem('nk_pass', pass);
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('login-error').style.display = 'none';
+    await loadData();
+    loadAds();
+  } catch(e) {
+    document.getElementById('login-error').style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'دخول';
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('nk_pass');
+  location.reload();
+}
+
+// Auto-login if session saved
+if (savedPass) doLogin();
+
+// ── Tabs ────────────────────────────────────────────────────────────────────
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ── Load Stats ───────────────────────────────────────────────────────────────
+async function loadData() {
+  try {
+    const res = await fetch(API + '?pass=' + encodeURIComponent(savedPass));
+    if (res.status === 401) { doLogout(); return; }
+    const d = await res.json();
+
+    document.getElementById('s-total').textContent = (d.summary?.totalVisits ?? 0).toLocaleString();
+    document.getElementById('s-unique').textContent = (d.summary?.uniqueVisitors ?? 0).toLocaleString();
+    document.getElementById('s-today').textContent = (d.recent?.filter(v => {
+      const t = new Date(v.createdAt);
+      const now = new Date();
+      return t.toDateString() === now.toDateString();
+    }).length ?? 0).toLocaleString();
+
+    maintenanceOn = d.summary?.maintenanceMode ?? false;
+    updateMaintBadge();
+    renderBars('top-countries', d.topCountries, 'country');
+    renderBars('top-pages', d.topPages, 'path');
+    renderBars('top-cities', d.topCities, 'city');
+    renderBars('top-screens', d.topScreens, 'screen');
+    renderTable(d.recent || []);
+  } catch(e) { showToast('خطأ في تحميل البيانات', true); }
+}
+
+function renderBars(id, data, key) {
+  const el = document.getElementById(id);
+  if (!data?.length) { el.innerHTML = '<div style="color:var(--muted);font-size:0.75rem;text-align:center;padding:10px">لا توجد بيانات</div>'; return; }
+  const max = Math.max(...data.map(d => d.visits));
+  el.innerHTML = data.map(d => `
+    <div class="bar-row">
+      <div class="bar-label">${d[key] || '—'}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(d.visits/max*100)}%"></div></div>
+      <div class="bar-count">${d.visits}</div>
+    </div>`).join('');
+}
+
+function renderTable(rows) {
+  const tb = document.getElementById('visits-table');
+  if (!rows.length) { tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">لا توجد زيارات</td></tr>'; return; }
+  tb.innerHTML = rows.map(v => `<tr>
+    <td>${new Date(v.createdAt).toLocaleString('ar')}</td>
+    <td>${v.country||'—'}</td><td>${v.city||'—'}</td>
+    <td>${v.path||'/'}</td><td>${v.screen||'—'}</td>
+  </tr>`).join('');
+}
+
+// ── Maintenance ──────────────────────────────────────────────────────────────
+function updateMaintBadge() {
+  const badge = document.getElementById('maint-badge');
+  const btn = document.getElementById('maint-btn');
+  if (maintenanceOn) {
+    badge.textContent = '● صيانة'; badge.className = 'badge badge-on';
+    btn.textContent = 'إيقاف الصيانة'; btn.className = 'btn btn-green';
+  } else {
+    badge.textContent = '● شغال'; badge.className = 'badge badge-off';
+    btn.textContent = 'تفعيل الصيانة'; btn.className = 'btn btn-red';
+  }
+}
+
+async function toggleMaintenance() {
+  try {
+    const res = await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pass: savedPass, action: 'set_maintenance', enabled: !maintenanceOn })
+    });
+    if (!res.ok) throw new Error();
+    maintenanceOn = !maintenanceOn;
+    updateMaintBadge();
+    showToast(maintenanceOn ? '🔧 وضع الصيانة مفعّل' : '✅ الموقع شغال');
+  } catch { showToast('فشل التغيير', true); }
+}
+
+// ── Ads ──────────────────────────────────────────────────────────────────────
+const ADS = ['header', 'footer', 'middle'];
+
+function loadAds() {
+  const cfg = JSON.parse(localStorage.getItem(ADS_KEY) || '{}');
+  ADS.forEach(slot => {
+    const code = cfg[slot]?.code || '';
+    const enabled = cfg[slot]?.enabled || false;
+    document.getElementById('ad-'+slot+'-code').value = code;
+    document.getElementById('ad-'+slot+'-enabled').checked = enabled;
+    updatePreview(slot);
+  });
+}
+
+function saveAd(slot) {
+  const cfg = JSON.parse(localStorage.getItem(ADS_KEY) || '{}');
+  cfg[slot] = {
+    code: document.getElementById('ad-'+slot+'-code').value.trim(),
+    enabled: document.getElementById('ad-'+slot+'-enabled').checked
+  };
+  localStorage.setItem(ADS_KEY, JSON.stringify(cfg));
+  // Inject into page
+  injectAds();
+  showToast('✅ تم حفظ إعلان ' + slot);
+}
+
+function updatePreview(slot) {
+  const code = document.getElementById('ad-'+slot+'-code').value.trim();
+  const preview = document.getElementById('ad-'+slot+'-preview');
+  preview.textContent = code ? '📢 سيظهر الإعلان هنا' : 'لا يوجد كود';
+}
+
+function injectAds() {
+  const cfg = JSON.parse(localStorage.getItem(ADS_KEY) || '{}');
+  ADS.forEach(slot => {
+    const el = document.getElementById('ad-zone-'+slot);
+    if (el) {
+      el.innerHTML = (cfg[slot]?.enabled && cfg[slot]?.code) ? cfg[slot].code : '';
+    }
+  });
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg, err=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (err?' err':'') + ' show';
+  setTimeout(()=>t.className='toast'+(err?' err':''), 2500);
+}
+</script>
+</body>
+</html>
